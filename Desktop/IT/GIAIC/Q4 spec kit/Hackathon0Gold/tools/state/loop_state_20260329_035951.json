@@ -1,0 +1,11 @@
+{
+  "prompt": "Process all files in /Needs_Action with Gold Tier Multi-Step Autonomy:\n\nPHASE 1: SCAN & CLASSIFY\n1. Scan /Needs_Action for all task files\n2. Detect multi-step workflows (sales \u2192 draft \u2192 HITL \u2192 publish)\n3. Classify as PERSONAL (HITL required) or BUSINESS (auto-process)\n4. Log classification to audit trail\n\nPHASE 2: PLAN & PREPARE\n1. Create detailed Plan.md for each task with:\n   - [ ] Checkboxes for each step\n   - Priority levels (high/medium/low)\n   - Multi-step workflow phases\n   - HITL approval checkpoints\n   - Execution strategy (auto/manual)\n2. Reference Company Handbook for tone/rules\n3. Cross Domain Integrator classifies by domain\n\nPHASE 3: EXECUTE MULTI-STEP WORKFLOWS\nFor BUSINESS tasks (auto-process):\n- Auto LinkedIn Poster: Sales lead \u2192 draft post\n- Move draft to /Pending_Approval\n- Wait for human approval\n- Publish when approved\n- Log to audit trail\n\nFor PERSONAL tasks (HITL):\n- Create approval request\n- Move to /Pending_Approval\n- Wait for human approval\n- Execute when approved\n- Log to audit trail\n\nPHASE 4: COMPLETE & LOG\n1. Verify all workflow steps completed\n2. Move source file from /Needs_Action to /Done\n3. Move plan to /Done\n4. Log completion to audit trail with full workflow\n5. Output <promise>TASK_COMPLETE</promise> when all done\n\nUse Ralph Wiggum Loop with max 20 iterations to handle complex workflows.\n",
+  "created_at": "2026-03-29T03:59:51.529022",
+  "max_iterations": 2,
+  "completion_promise": "TASK_COMPLETE",
+  "current_iteration": 0,
+  "task_complete": false,
+  "tasks_processed": 0,
+  "multi_step_tasks": [],
+  "iterations": []
+}
