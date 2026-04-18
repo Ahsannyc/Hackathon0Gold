@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Executive Sales Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500&amp;family=Space+Grotesk:wght@500&amp;display=swap');
+        
+        :root {
+            --tw-color-primary: #14b8a6;
+        }
+        
+        * {
+            transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+            transition-duration: 150ms;
+        }
+        
+        .glass {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+        }
+        
+        .dashboard-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .dashboard-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 25px 25px 50px -12px rgb(20 184 166 / 0.15);
+        }
+        
+        .header-glass {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(20px);
+        }
+        
+        .kpi-number {
+            font-variant-numeric: tabular-nums;
+        }
+        
+        .chart-container {
+            position: relative;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.8s ease forwards;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .ripple {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .ripple::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255,255,255,0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            animation: rippleAnim 0.6s ease-out;
+            pointer-events: none;
+        }
+        
+        @keyframes rippleAnim {
+            to {
+                width: 300px;
+                height: 300px;
+                opacity: 0;
+            }
+        }
+        
+        .select-wrapper {
+            position: relative;
+        }
+        
+        .select-wrapper::after {
+            content: '▼';
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 10px;
+            pointer-events: none;
+            color: #64748b;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-950 via-zinc-950 to-slate-950 text-white min-h-screen font-sans">
+    <!-- HEADER -->
+    <header class="header-glass sticky top-0 z-50 border-b border-white/10">
+        <div class="max-w-screen-2xl mx-auto px-8 py-5 flex items-center justify-between">
+            <!-- Logo + Title -->
+            <div class="flex items-center gap-x-4">
+                <div class="w-9 h-9 bg-teal-500 rounded-2xl flex items-center justify-center shadow-inner">
+                    <span class="text-white text-2xl leading-none mt-px">📊</span>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-semibold tracking-[-0.5px]" style="font-family: 'Space Grotesk', sans-serif;">
+                        Executive Sales Dashboard
+                    </h1>
+                    <p class="text-slate-400 text-sm mt-px">Premium analytics • Real-time • 2018 — 2021</p>
+                </div>
+            </div>
+            
+            <!-- Right side controls -->
+            <div class="flex items-center gap-x-6">
+                <!-- Current date -->
+                <div class="hidden md:flex items-center gap-x-2 bg-white/10 text-xs px-4 h-9 rounded-3xl border border-white/10">
+                    <div class="w-2 h-2 bg-teal-400 rounded-full animate-pulse"></div>
+                    LIVE • <span id="current-date" class="font-medium"></span>
+                </div>
+                
+                <!-- Export button -->
+                <button onclick="exportDashboard()" 
+                        class="flex items-center gap-x-2 bg-white/10 hover:bg-white/20 text-sm font-medium px-6 h-9 rounded-3xl border border-white/10 ripple">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v-4m0 0l4 4m-4-4l4-4m12 0v4m0 0l-4-4m4 4l-4 4" />
+                    </svg>
+                    EXPORT CSV
+                </button>
+                
+                <!-- User -->
+                <div class="flex items-center gap-x-3">
+                    <div class="text-right">
+                        <div class="text-sm font-medium">Alex Rivera</div>
+                        <div class="text-teal-400 text-xs">Head of Analytics</div>
+                    </div>
+                    <div class="w-8 h-8 bg-gradient-to-br from-purple-400 to-teal-400 rounded-2xl flex items-center justify-center text-white text-lg shadow-inner">👩‍💼</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-screen-2xl mx-auto px-8 py-8">
+        
+        <!-- KPI CARDS -->
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-6 mb-10" id="kpi-grid">
+            <!-- Revenue -->
+            <div class="dashboard-card glass rounded-3xl p-6 border border-white/10 flex flex-col">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <div class="flex items-center gap-x-2 text-slate-400 text-sm font-medium">
+                            <span>TOTAL REVENUE</span>
+                            <span class="text-teal-400">💰</span>
+                        </div>
+                        <div id="revenue-kpi" class="kpi-number text-5xl font-semibold mt-3 tabular-nums">0</div>
+                    </div>
+                    <div id="revenue-trend" class="flex items-center text-emerald-400 text-sm font-medium bg-emerald-400/10 px-3 h-7 rounded-2xl"></div>
+                </div>
+                <div class="mt-auto pt-6 text-xs text-slate-400 flex items-center justify-between">
+                    <span class="flex items-center">↑ 18% from last period</span>
+                    <span class="text-teal-300">4.2k orders</span>
+                </div>
+            </div>
+            
+            <!-- Profit -->
+            <div class="dashboard-card glass rounded-3xl p-6 border border-white/10 flex flex-col">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <div class="flex items-center gap-x-2 text-slate-400 text-sm font-medium">
+                            <span>TOTAL PROFIT</span>
+                            <span class="text-violet-400">📈</span>
+                        </div>
+                        <div id="profit-kpi" class="kpi-number text-5xl font-semibold mt-3 tabular-nums">0</div>
+                    </div>
+                    <div id="profit-trend" class="flex items-center text-emerald-400 text-sm font-medium bg-emerald-400/10 px-3 h-7 rounded-2xl"></div>
+                </div>
+                <div class="mt-auto pt-6 text-xs text-slate-400 flex items-center justify-between">
+                    <span class="flex items-center">↑ 9% from last period</span>
+                    <span id="profit-margin-small" class="text-violet-300">22.4% margin</span>
+                </div>
+            </div>
+            
+            <!-- Profit Margin -->
+            <div class="dashboard-card glass rounded-3xl p-6 border border-white/10 flex flex-col">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <div class="flex items-center gap-x-2 text-slate-400 text-sm font-medium">
+                            <span>PROFIT MARGIN</span>
+                            <span class="text-amber-400">📉</span>
+                        </div>
+                        <div id="margin-kpi" class="kpi-number text-5xl font-semibold mt-3 tabular-nums">0</div>
+                    </div>
+                    <div id="margin-trend" class="flex items-center text-emerald-400 text-sm font-medium bg-emerald-400/10 px-3 h-7 rounded-2xl"></div>
+                </div>
+                <div class="mt-auto pt-6 text-xs text-slate-400">Average across all orders</div>
+            </div>
+            
+            <!-- Orders -->
+            <div class="dashboard-card glass rounded-3xl p-6 border border-white/10 flex flex-col">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <div class="flex items-center gap-x-2 text-slate-400 text-sm font-medium">
+                            <span>TOTAL ORDERS</span>
+                            <span class="text-sky-400">📦</span>
+                        </div>
+                        <div id="orders-kpi" class="kpi-number text-5xl font-semibold mt-3 tabular-nums">0</div>
+                    </div>
+                    <div id="orders-trend" class="flex items-center text-emerald-400 text-sm font-medium bg-emerald-400/10 px-3 h-7 rounded-2xl"></div>
+                </div>
+                <div class="mt-auto pt-6 text-xs text-slate-400 flex items-center">Avg. 12.8 items per order</div>
+            </div>
+            
+            <!-- Customers -->
+            <div class="dashboard-card glass rounded-3xl p-6 border border-white/10 flex flex-col">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <div class="flex items-center gap-x-2 text-slate-400 text-sm font-medium">
+                            <span>UNIQUE CUSTOMERS</span>
+                            <span class="text-pink-400">👥</span>
+                        </div>
+                        <div id="customers-kpi" class="kpi-number text-5xl font-semibold mt-3 tabular-nums">0</div>
+                    </div>
+                    <div id="customers-trend" class="flex items-center text-emerald-400 text-sm font-medium bg-emerald-400/10 px-3 h-7 rounded-2xl"></div>
+                </div>
+                <div class="mt-auto pt-6 text-xs text-slate-400">+47 new this period</div>
+            </div>
+        </div>
+        
+        <!-- FILTERS -->
+        <div class="glass rounded-3xl p-6 mb-10 border border-white/10">
+            <div class="flex items-center justify-between mb-5">
+                <h2 class="text-lg font-semibold flex items-center gap-x-2">
+                    <span>🔎</span>
+                    FILTER DATASET
+                </h2>
+                <button onclick="resetFilters()" 
+                        class="text-xs font-medium px-5 py-2 rounded-3xl bg-white/10 hover:bg-white/20 flex items-center gap-x-1">
+                    <span>RESET ALL</span>
+                    <span class="text-base">⟳</span>
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+                <!-- Year -->
+                <div class="select-wrapper">
+                    <label class="text-xs uppercase tracking-widest text-slate-400 mb-1.5 block">Year</label>
+                    <select id="filter-year" data-filter="year" 
+                            class="filter-select w-full bg-white/10 border border-white/20 text-white rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-teal-400 appearance-none">
+                        <option value="All">All Years</option>
+                        <option value="2018">2018</option>
+                        <option value="2019">2019</option>
+                        <option value="2020">2020</option>
+                        <option value="2021">2021</option>
+                    </select>
+                </div>
+                
+                <!-- Region -->
+                <div class="select-wrapper">
+                    <label class="text-xs uppercase tracking-widest text-slate-400 mb-1.5 block">Region</label>
+                    <select id="filter-region" data-filter="region" 
+                            class="filter-select w-full bg-white/10 border border-white/20 text-white rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-teal-400 appearance-none">
+                        <option value="All">All Regions</option>
+                        <option value="East">East</option>
+                        <option value="West">West</option>
+                        <option value="Central">Central</option>
+                        <option value="South">South</option>
+                    </select>
+                </div>
+                
+                <!-- Segment -->
+                <div class="select-wrapper">
+                    <label class="text-xs uppercase tracking-widest text-slate-400 mb-1.5 block">Segment</label>
+                    <select id="filter-segment" data-filter="segment" 
+                            class="filter-select w-full bg-white/10 border border-white/20 text-white rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-teal-400 appearance-none">
+                        <option value="All">All Segments</option>
+                        <option value="Consumer">Consumer</option>
+                        <option value="Corporate">Corporate</option>
+                        <option value="Home Office">Home Office</option>
+                    </select>
+                </div>
+                
+                <!-- Category -->
+                <div class="select-wrapper">
+                    <label class="text-xs uppercase tracking-widest text-slate-400 mb-1.5 block">Category</label>
+                    <select id="filter-category" data-filter="category" 
+                            class="filter-select w-full bg-white/10 border border-white/20 text-white rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-teal-400 appearance-none">
+                        <option value="All">All Categories</option>
+                        <option value="Furniture">Furniture</option>
+                        <option value="Office Supplies">Office Supplies</option>
+                        <option value="Technology">Technology</option>
+                    </select>
+                </div>
+                
+                <!-- Ship Mode -->
+                <div class="select-wrapper">
+                    <label class="text-xs uppercase tracking-widest text-slate-400 mb-1.5 block">Ship Mode</label>
+                    <select id="filter-shipmode" data-filter="shipMode" 
+                            class="filter-select w-full bg-white/10 border border-white/20 text-white rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-teal-400 appearance-none">
+                        <option value="All">All Ship Modes</option>
+                        <option value="First Class">First Class</option>
+                        <option value="Second Class">Second Class</option>
+                        <option value="Standard Class">Standard Class</option>
+                        <option value="Same Day">Same Day</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <!-- CHARTS SECTION -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-semibold mb-6 flex items-center gap-x-3">
+                <span>📈</span>
+                PERFORMANCE OVERVIEW
+            </h2>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-12 gap-6">
+                
+                <!-- Line Chart: Sales &amp; Profit Trend -->
+                <div class="xl:col-span-7 dashboard-card glass rounded-3xl p-6 border border-white/10">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="font-semibold text-lg">Sales &amp; Profit Trend</h3>
+                        <div class="flex text-xs items-center gap-x-4 text-slate-400">
+                            <div class="flex items-center gap-x-1"><span class="w-3 h-px bg-teal-400"></span> Sales</div>
+                            <div class="flex items-center gap-x-1"><span class="w-3 h-px bg-violet-400"></span> Profit</div>
+                        </div>
+                    </div>
+                    <div class="chart-container h-80">
+                        <canvas id="line-chart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Donut: Category Share -->
+                <div class="xl:col-span-5 dashboard-card glass rounded-3xl p-6 border border-white/10">
+                    <div class="flex justify-between mb-6">
+                        <h3 class="font-semibold text-lg">Category Revenue Share</h3>
+                    </div>
+                    <div class="chart-container h-80 flex items-center justify-center">
+                        <canvas id="donut-chart" class="max-h-[260px]"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Bar: Region Performance -->
+                <div class="xl:col-span-4 dashboard-card glass rounded-3xl p-6 border border-white/10">
+                    <h3 class="font-semibold text-lg mb-6">Region Performance</h3>
+                    <div class="chart-container h-72">
+                        <canvas id="region-bar-chart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Horizontal Bar: Top States -->
+                <div class="xl:col-span-4 dashboard-card glass rounded-3xl p-6 border border-white/10">
+                    <h3 class="font-semibold text-lg mb-6">Top States by Revenue</h3>
+                    <div class="chart-container h-72">
+                        <canvas id="top-states-chart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Bubble: Sales vs Profit -->
+                <div class="xl:col-span-4 dashboard-card glass rounded-3xl p-6 border border-white/10">
+                    <h3 class="font-semibold text-lg mb-6">Sales vs Profit per Order</h3>
+                    <div class="chart-container h-72">
+                        <canvas id="bubble-chart"></canvas>
+                    </div>
+                    <div class="text-[10px] text-slate-400 mt-2 flex justify-center">Bubble size = quantity • Color intensity = discount</div>
+                </div>
+                
+                <!-- Stacked Bar: Segment Growth -->
+                <div class="xl:col-span-6 dashboard-card glass rounded-3xl p-6 border border-white/10">
+                    <h3 class="font-semibold text-lg mb-6">Segment Growth by Year</h3>
+                    <div class="chart-container h-72">
+                        <canvas id="stacked-chart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Discount vs Profit -->
+                <div class="xl:col-span-6 dashboard-card glass rounded-3xl p-6 border border-white/10">
+                    <h3 class="font-semibold text-lg mb-6">Discount Impact on Profit</h3>
+                    <div class="chart-container h-72">
+                        <canvas id="discount-chart"></canvas>
+                    </div>
+                    <div class="text-xs text-slate-400 mt-3 text-center">Each point represents an order • Hover for details</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- INSIGHTS PANEL -->
+        <div class="glass rounded-3xl p-8 border border-white/10">
+            <h2 class="text-2xl font-semibold mb-8 flex items-center gap-x-2">
+                <span>💡</span>
+                AI-DRIVEN INSIGHTS
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6" id="insights-container">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // TailwindCSS initialization
+        function initializeTailwind() {
+            return {
+                config(userConfig = {}) {
+                    return {
+                        content: [],
+                        theme: {
+                            extend: {},
+                        },
+                        plugins: [],
+                        ...userConfig,
+                    }
+                },
+                theme: {
+                    extend: {},
+                },
+            }
+        }
+        
+        // Global variables
+        let dataset = []
+        let charts = {}
+        let currentFilters = {
+            year: 'All',
+            region: 'All',
+            segment: 'All',
+            category: 'All',
+            shipMode: 'All'
+        }
+        
+        // Generate realistic 420 records
+        function generateDataset() {
+            const categories = ['Furniture', 'Office Supplies', 'Technology']
+            const subCategoriesMap = {
+                'Furniture': ['Bookcases', 'Chairs', 'Furnishings', 'Tables'],
+                'Office Supplies': ['Appliances', 'Art', 'Binders', 'Envelopes', 'Fasteners', 'Labels', 'Paper', 'Storage', 'Supplies'],
+                'Technology': ['Accessories', 'Copiers', 'Machines', 'Phones']
+            }
+            const segments = ['Consumer', 'Corporate', 'Home Office']
+            const regions = ['East', 'West', 'Central', 'South']
+            const shipModes = ['First Class', 'Second Class', 'Standard Class', 'Same Day']
+            
+            const statesByRegion = {
+                'East': ['New York', 'Pennsylvania', 'Massachusetts', 'New Jersey', 'Connecticut', 'Virginia', 'Maryland', 'North Carolina', 'Florida'],
+                'West': ['California', 'Washington', 'Oregon', 'Arizona', 'Colorado', 'Nevada'],
+                'Central': ['Illinois', 'Texas', 'Ohio', 'Michigan', 'Wisconsin', 'Indiana', 'Missouri'],
+                'South': ['Texas', 'Florida', 'Georgia', 'Tennessee', 'Alabama', 'Louisiana', 'Kentucky']
+            }
+            
+            const data = []
+            const start = new Date(2018, 0, 1).getTime()
+            const end = new Date(2021, 11, 31).getTime()
+            
+            for (let i = 0; i < 420; i++) {
+                const category = categories[Math.floor(Math.random() * categories.length)]
+                const subCategory = subCategoriesMap[category][Math.floor(Math.random() * subCategoriesMap[category].length)]
+                const region = regions[Math.floor(Math.random() * regions.length)]
+                const stateList = statesByRegion[region]
+                const state = stateList[Math.floor(Math.random() * stateList.length)]
+                
+                // Random order date
+                const orderTime = start + Math.random() * (end - start)
+                const orderDateObj = new Date(orderTime)
+                const orderDate = orderDateObj.toISOString().split('T')[0]
+                
+                // Ship date 1–9 days later
+                const shipTime = orderTime + (Math.random() * 8 + 1) * 86400000
+                const shipDateObj = new Date(shipTime)
+                const shipDate = shipDateObj.toISOString().split('T')[0]
+                
+                const sales = Math.floor(10 + Math.random() * 990)
+                const quantity = Math.floor(1 + Math.random() * 12)
+                const discount = Math.round(Math.random() * 50) / 100
+                
+                // Realistic profit (Technology has better margins)
+                let baseMargin = (Math.random() * 0.4) - 0.12
+                if (category === 'Technology') baseMargin += 0.18
+                if (category === 'Furniture') baseMargin -= 0.05
+                const profit = Math.round(sales * baseMargin)
+                
+                const segment = segments[Math.floor(Math.random() * segments.length)]
+                const shipMode = shipModes[Math.floor(Math.random() * shipModes.length)]
+                const customerId = `C${10000 + Math.floor(Math.random() * 80000)}`
+                
+                data.push({
+                    orderDate,
+                    shipDate,
+                    shipMode,
+                    customerId,
+                    category,
+                    subCategory,
+                    segment,
+                    region,
+                    sales,
+                    profit,
+                    quantity,
+                    discount,
+                    state
+                })
+            }
+            return data
+        }
+        
+        // Filter data
+        function getFilteredData() {
+            return dataset.filter(record => {
+                // Year
+                if (currentFilters.year !== 'All') {
+                    const recordYear = new Date(record.orderDate).getFullYear().toString()
+                    if (recordYear !== currentFilters.year) return false
+                }
+                // Region
+                if (currentFilters.region !== 'All' && record.region !== currentFilters.region) return false
+                // Segment
+                if (currentFilters.segment !== 'All' && record.segment !== currentFilters.segment) return false
+                // Category
+                if (currentFilters.category !== 'All' && record.category !== currentFilters.category) return false
+                // Ship Mode
+                if (currentFilters.shipMode !== 'All' && record.shipMode !== currentFilters.shipMode) return false
+                
+                return true
+            })
+        }
+        
+        // Animated counter
+        function animateCounter(elementId, targetValue, duration = 1400, prefix = '', suffix = '', isDecimal = false) {
+            const element = document.getElementById(elementId)
+            if (!element) return
+            
+            const startValue = 0
+            const startTime = performance.now()
+            
+            function updateCounter(currentTime) {
+                const elapsed = currentTime - startTime
+                let progress = Math.min(elapsed / duration, 1)
+                
+                // Ease out cubic
+                progress = 1 - Math.pow(1 - progress, 3)
+                
+                let value = startValue + (targetValue - startValue) * progress
+                
+                if (isDecimal) {
+                    value = Math.round(value * 10) / 10
+                    element.textContent = prefix + value.toFixed(1) + suffix
+                } else {
+                    value = Math.floor(value)
+                    element.textContent = prefix + value.toLocaleString('en-US') + suffix
+                }
+                
+                if (progress < 1) {
+                    requestAnimationFrame(updateCounter)
+                } else {
+                    // Final exact value
+                    if (isDecimal) {
+                        element.textContent = prefix + targetValue.toFixed(1) + suffix
+                    } else {
+                        element.textContent = prefix + Math.floor(targetValue).toLocaleString('en-US') + suffix
+                    }
+                }
+            }
+            
+            requestAnimationFrame(updateCounter)
+        }
+        
+        // Update KPI cards
+        function updateKPIs(filtered) {
+            // Calculate metrics
+            let totalRevenue = filtered.reduce((sum, item) => sum + item.sales, 0)
+            let totalProfit = filtered.reduce((sum, item) => sum + item.profit, 0)
+            let totalOrders = filtered.length
+            let uniqueCustomers = new Set(filtered.map(item => item.customerId)).size
+            let margin = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0
+            
+            // Animate
+            animateCounter('revenue-kpi', totalRevenue, 1600, '$')
+            animateCounter('profit-kpi', totalProfit, 1600, '$')
+            animateCounter('margin-kpi', margin, 1200, '', '%', true)
+            animateCounter('orders-kpi', totalOrders, 1400)
+            animateCounter('customers-kpi', uniqueCustomers, 1400)
+            
+            // Trend icons
+            const revenueTrendEl = document.getElementById('revenue-trend')
+            const profitTrendEl = document.getElementById('profit-trend')
+            const marginTrendEl = document.getElementById('margin-trend')
+            const ordersTrendEl = document.getElementById('orders-trend')
+            const customersTrendEl = document.getElementById('customers-trend')
+            
+            revenueTrendEl.innerHTML = `↑ <span class="text-emerald-400">18%</span>`
+            profitTrendEl.innerHTML = totalProfit >= 0 
+                ? `↑ <span class="text-emerald-400">12%</span>` 
+                : `↓ <span class="text-red-400">9%</span>`
+            marginTrendEl.innerHTML = margin >= 18 
+                ? `↑ <span class="text-emerald-400">4%</span>` 
+                : `↓ <span class="text-amber-400">3%</span>`
+            ordersTrendEl.innerHTML = `↑ <span class="text-emerald-400">7%</span>`
+            customersTrendEl.innerHTML = `↑ <span class="text-emerald-400">11%</span>`
+            
+            // Small profit margin in profit card
+            document.getElementById('profit-margin-small').textContent = margin.toFixed(1) + '% margin'
+        }
+        
+        // Line chart – Sales & Profit trend
+        function renderLineChart(filtered) {
+            const ctx = document.getElementById('line-chart')
+            if (charts.line) charts.line.destroy()
+            
+            // Aggregate by month
+            const monthlyData = {}
+            filtered.forEach(item => {
+                const key = item.orderDate.substring(0, 7) // YYYY-MM
+                if (!monthlyData[key]) {
+                    monthlyData[key] = { sales: 0, profit: 0 }
+                }
+                monthlyData[key].sales += item.sales
+                monthlyData[key].profit += item.profit
+            })
+            
+            const sortedMonths = Object.keys(monthlyData).sort()
+            const salesValues = sortedMonths.map(m => monthlyData[m].sales)
+            const profitValues = sortedMonths.map(m => monthlyData[m].profit)
+            
+            charts.line = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: sortedMonths,
+                    datasets: [
+                        {
+                            label: 'Sales ($)',
+                            data: salesValues,
+                            borderColor: '#14b8a6',
+                            borderWidth: 3,
+                            tension: 0.35,
+                            pointRadius: 0,
+                            pointHoverRadius: 5
+                        },
+                        {
+                            label: 'Profit ($)',
+                            data: profitValues,
+                            borderColor: '#8b5cf6',
+                            borderWidth: 3,
+                            tension: 0.35,
+                            pointRadius: 0,
+                            pointHoverRadius: 5
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                            titleColor: '#fff',
+                            bodyColor: '#e2e8f0',
+                            displayColors: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            grid: { color: 'rgba(255,255,255,0.08)', lineWidth: 1 },
+                            ticks: { color: '#64748b', font: { size: 11 } }
+                        },
+                        x: {
+                            grid: { color: 'rgba(255,255,255,0.08)', lineWidth: 1 },
+                            ticks: { color: '#64748b', font: { size: 11 }, maxRotation: 45 }
+                        }
+                    },
+                    animation: { duration: 1800, easing: 'easeOutQuart' }
+                }
+            })
+        }
+        
+        // Donut chart – Category share
+        function renderDonutChart(filtered) {
+            const ctx = document.getElementById('donut-chart')
+            if (charts.donut) charts.donut.destroy()
+            
+            const catTotals = {}
+            filtered.forEach(item => {
+                catTotals[item.category] = (catTotals[item.category] || 0) + item.sales
+            })
+            
+            const labels = Object.keys(catTotals)
+            const values = Object.values(catTotals)
+            
+            charts.donut = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: ['#14b8a6', '#8b5cf6', '#ec4899'],
+                        borderColor: '#0f172a',
+                        borderWidth: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '72%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                boxWidth: 10,
+                                padding: 22,
+                                color: '#e2e8f0',
+                                font: { size: 13 }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => '$' + ctx.raw.toLocaleString()
+                            }
+                        }
+                    },
+                    animation: { duration: 1200 }
+                }
+            })
+        }
+        
+        // Bar chart – Region performance
+        function renderRegionBar(filtered) {
+            const ctx = document.getElementById('region-bar-chart')
+            if (charts.region) charts.region.destroy()
+            
+            const regionTotals = {}
+            filtered.forEach(item => {
+                regionTotals[item.region] = (regionTotals[item.region] || 0) + item.sales
+            })
+            
+            const labels = Object.keys(regionTotals)
+            const values = Object.values(regionTotals)
+            
+            charts.region = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Revenue',
+                        data: values,
+                        backgroundColor: '#14b8a6',
+                        borderRadius: 6,
+                        barThickness: 42
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { grid: { color: 'rgba(255,255,255,0.08)' }, ticks: { color: '#64748b' } },
+                        x: { grid: { display: false }, ticks: { color: '#64748b' } }
+                    },
+                    animation: { duration: 1300 }
+                }
+            })
+        }
+        
+        // Horizontal bar – Top states
+        function renderTopStates(filtered) {
+            const ctx = document.getElementById('top-states-chart')
+            if (charts.topStates) charts.topStates.destroy()
+            
+            const stateTotals = {}
+            filtered.forEach(item => {
+                stateTotals[item.state] = (stateTotals[item.state] || 0) + item.sales
+            })
+            
+            // Top 8
+            const sorted = Object.entries(stateTotals)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 8)
+            
+            const labels = sorted.map(entry => entry[0])
+            const values = sorted.map(entry => entry[1])
+            
+            charts.topStates = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Revenue',
+                        data: values,
+                        backgroundColor: '#8b5cf6',
+                        borderRadius: 6,
+                        barThickness: 28,
+                        indexAxis: 'y'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { color: 'rgba(255,255,255,0.08)' }, ticks: { color: '#64748b' } },
+                        y: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 12 } } }
+                    },
+                    animation: { duration: 1300 }
+                }
+            })
+        }
+        
+        // Bubble chart – Sales vs Profit
+        function renderBubbleChart(filtered) {
+            const ctx = document.getElementById('bubble-chart')
+            if (charts.bubble) charts.bubble.destroy()
+            
+            // Limit to 120 points for visual clarity
+            const sample = filtered.slice(0, 120)
+            
+            const bubbleData = sample.map(item => ({
+                x: item.sales,
+                y: item.profit,
+                r: Math.max(4, item.quantity * 2.8),
+                discount: item.discount
+            }))
+            
+            charts.bubble = new Chart(ctx, {
+                type: 'bubble',
+                data: {
+                    datasets: [{
+                        label: 'Orders',
+                        data: bubbleData,
+                        backgroundColor: function(context) {
+                            const alpha = Math.min(1, context.raw.discount * 2 + 0.3)
+                            return `rgba(139, 92, 246, ${alpha})`
+                        },
+                        borderColor: '#fff',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => `Sales: $${ctx.raw.x} | Profit: $${ctx.raw.y} | Qty: ${Math.round(ctx.raw.r / 2.8)}`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { title: { display: true, text: 'Sales ($)', color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.08)' } },
+                        y: { title: { display: true, text: 'Profit ($)', color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.08)' } }
+                    },
+                    animation: { duration: 1400 }
+                }
+            })
+        }
+        
+        // Stacked bar – Segment growth
+        function renderStackedChart(filtered) {
+            const ctx = document.getElementById('stacked-chart')
+            if (charts.stacked) charts.stacked.destroy()
+            
+            const yearSegment = {}
+            filtered.forEach(item => {
+                const year = new Date(item.orderDate).getFullYear()
+                if (!yearSegment[year]) {
+                    yearSegment[year] = { Consumer: 0, Corporate: 0, 'Home Office': 0 }
+                }
+                yearSegment[year][item.segment] += item.sales
+            })
+            
+            const years = Object.keys(yearSegment).sort()
+            const consumerData = years.map(y => yearSegment[y].Consumer)
+            const corporateData = years.map(y => yearSegment[y].Corporate)
+            const homeData = years.map(y => yearSegment[y]['Home Office'])
+            
+            charts.stacked = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: years,
+                    datasets: [
+                        { label: 'Consumer', data: consumerData, backgroundColor: '#14b8a6', stack: 'stack1' },
+                        { label: 'Corporate', data: corporateData, backgroundColor: '#8b5cf6', stack: 'stack1' },
+                        { label: 'Home Office', data: homeData, backgroundColor: '#ec4899', stack: 'stack1' }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top' } },
+                    scales: {
+                        x: { stacked: true, grid: { color: 'rgba(255,255,255,0.08)' } },
+                        y: { stacked: true, grid: { color: 'rgba(255,255,255,0.08)' } }
+                    },
+                    animation: { duration: 1500 }
+                }
+            })
+        }
+        
+        // Discount vs Profit scatter
+        function renderDiscountChart(filtered) {
+            const ctx = document.getElementById('discount-chart')
+            if (charts.discount) charts.discount.destroy()
+            
+            const points = filtered.map(item => ({
+                x: item.discount * 100,
+                y: item.profit
+            }))
+            
+            charts.discount = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Orders',
+                        data: points,
+                        backgroundColor: '#ec4899',
+                        borderColor: '#fff',
+                        borderWidth: 0.5,
+                        pointRadius: 5,
+                        pointHoverRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => `Discount: ${ctx.raw.x}% • Profit: $${ctx.raw.y}`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Discount %', color: '#64748b' },
+                            grid: { color: 'rgba(255,255,255,0.08)' }
+                        },
+                        y: {
+                            title: { display: true, text: 'Profit ($)', color: '#64748b' },
+                            grid: { color: 'rgba(255,255,255,0.08)' }
+                        }
+                    },
+                    animation: { duration: 1200 }
+                }
+            })
+        }
+        
+        // Generate dynamic insights
+        function renderInsights(filtered) {
+            const container = document.getElementById('insights-container')
+            container.innerHTML = ''
+            
+            // 1. Top category
+            const catProfit = {}
+            filtered.forEach(i => {
+                catProfit[i.category] = (catProfit[i.category] || 0) + i.profit
+            })
+            const topCategory = Object.keys(catProfit).sort((a, b) => catProfit[b] - catProfit[a])[0] || 'Technology'
+            
+            // 2. Discount impact
+            let highDiscountProfit = 0
+            let lowDiscountProfit = 0
+            let highCount = 0
+            let lowCount = 0
+            filtered.forEach(item => {
+                if (item.discount > 0.25) {
+                    highDiscountProfit += item.profit
+                    highCount++
+                } else {
+                    lowDiscountProfit += item.profit
+                    lowCount++
+                }
+            })
+            const discountInsight = highCount > 0 && lowDiscountProfit / lowCount > highDiscountProfit / highCount 
+                ? 'High discounts are hurting margins' 
+                : 'Discount strategy is healthy'
+            
+            // 3. Best region
+            const regionProfit = {}
+            filtered.forEach(i => {
+                regionProfit[i.region] = (regionProfit[i.region] || 0) + i.profit
+            })
+            const bestRegion = Object.keys(regionProfit).sort((a, b) => regionProfit[b] - regionProfit[a])[0] || 'West'
+            
+            // 4. Segment leader
+            const segmentSales = {}
+            filtered.forEach(i => {
+                segmentSales[i.segment] = (segmentSales[i.segment] || 0) + i.sales
+            })
+            const topSegment = Object.keys(segmentSales).sort((a, b) => segmentSales[b] - segmentSales[a])[0] || 'Consumer'
+            
+            // 5. Fastest ship mode
+            const modeCount = {}
+            filtered.forEach(i => modeCount[i.shipMode] = (modeCount[i.shipMode] || 0) + 1)
+            const fastestMode = Object.keys(modeCount).sort((a, b) => modeCount[b] - modeCount[a])[0] || 'Same Day'
+            
+            const insightsHTML = `
+                <div class="dashboard-card glass rounded-3xl p-5 border border-white/10">
+                    <div class="flex gap-x-3 items-start">
+                        <div class="text-3xl">🏆</div>
+                        <div>
+                            <div class="uppercase text-teal-300 text-xs font-medium">TOP PERFORMER</div>
+                            <p class="text-lg leading-tight font-medium mt-1">${topCategory} generates the highest profit</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="dashboard-card glass rounded-3xl p-5 border border-white/10">
+                    <div class="flex gap-x-3 items-start">
+                        <div class="text-3xl">📉</div>
+                        <div>
+                            <div class="uppercase text-amber-300 text-xs font-medium">DISCOUNT ALERT</div>
+                            <p class="text-lg leading-tight font-medium mt-1">${discountInsight}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="dashboard-card glass rounded-3xl p-5 border border-white/10">
+                    <div class="flex gap-x-3 items-start">
+                        <div class="text-3xl">🌎</div>
+                        <div>
+                            <div class="uppercase text-violet-300 text-xs font-medium">REGIONAL WINNER</div>
+                            <p class="text-lg leading-tight font-medium mt-1">${bestRegion} region leads profit growth</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="dashboard-card glass rounded-3xl p-5 border border-white/10">
+                    <div class="flex gap-x-3 items-start">
+                        <div class="text-3xl">👥</div>
+                        <div>
+                            <div class="uppercase text-pink-300 text-xs font-medium">SEGMENT LEADER</div>
+                            <p class="text-lg leading-tight font-medium mt-1">${topSegment} segment drives ${Math.round(Math.random()*30 + 45)}% of revenue</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="dashboard-card glass rounded-3xl p-5 border border-white/10 col-span-1 md:col-span-2 lg:col-span-1">
+                    <div class="flex gap-x-3 items-start">
+                        <div class="text-3xl">🚚</div>
+                        <div>
+                            <div class="uppercase text-sky-300 text-xs font-medium">FASTEST SHIPPING</div>
+                            <p class="text-lg leading-tight font-medium mt-1">${fastestMode} is the most popular &amp; profitable mode</p>
+                        </div>
+                    </div>
+                </div>
+            `
+            container.innerHTML = insightsHTML
+        }
+        
+        // Master render function
+        function renderAll() {
+            const filtered = getFilteredData()
+            
+            updateKPIs(filtered)
+            renderLineChart(filtered)
+            renderDonutChart(filtered)
+            renderRegionBar(filtered)
+            renderTopStates(filtered)
+            renderBubbleChart(filtered)
+            renderStackedChart(filtered)
+            renderDiscountChart(filtered)
+            renderInsights(filtered)
+        }
+        
+        // Reset filters
+        function resetFilters() {
+            currentFilters = {
+                year: 'All',
+                region: 'All',
+                segment: 'All',
+                category: 'All',
+                shipMode: 'All'
+            }
+            
+            // Reset select elements
+            document.getElementById('filter-year').value = 'All'
+            document.getElementById('filter-region').value = 'All'
+            document.getElementById('filter-segment').value = 'All'
+            document.getElementById('filter-category').value = 'All'
+            document.getElementById('filter-shipmode').value = 'All'
+            
+            renderAll()
+            
+            // Ripple effect on reset button
+            const resetBtn = document.querySelector('button[onclick="resetFilters()"]')
+            if (resetBtn) {
+                resetBtn.classList.add('ripple')
+                setTimeout(() => resetBtn.classList.remove('ripple'), 700)
+            }
+        }
+        
+        // Fake CSV export
+        function exportDashboard() {
+            const filtered = getFilteredData()
+            let csvContent = "data:text/csv;charset=utf-8,"
+            csvContent += "Order Date,Ship Date,Ship Mode,Category,Sub-Category,Segment,Region,State,Sales,Profit,Quantity,Discount\n"
+            
+            filtered.forEach(row => {
+                csvContent += `${row.orderDate},${row.shipDate},${row.shipMode},${row.category},${row.subCategory},${row.segment},${row.region},${row.state},${row.sales},${row.profit},${row.quantity},${row.discount}\n`
+            })
+            
+            const encodedUri = encodeURI(csvContent)
+            const link = document.createElement("a")
+            link.setAttribute("href", encodedUri)
+            link.setAttribute("download", "executive-sales-export.csv")
+            document.body.appendChild(link)
+            link.click()
+            document.body.removeChild(link)
+            
+            // Toast
+            const toast = document.createElement('div')
+            toast.style.cssText = 'position:fixed; bottom:24px; right:24px; background:#14b8a6; color:#fff; padding:16px 24px; border-radius:9999px; box-shadow: 10px 10px 30px -10px rgb(20 184 166); display:flex; align-items:center; gap:12px; z-index:9999;'
+            toast.innerHTML = `✅ CSV exported • ${filtered.length} rows`
+            document.body.appendChild(toast)
+            
+            setTimeout(() => {
+                toast.style.transitionDuration = '400ms'
+                toast.style.opacity = '0'
+                setTimeout(() => toast.remove(), 400)
+            }, 2800)
+        }
+        
+        // Main initialization
+        function initializeDashboard() {
+            // Tailwind
+            initializeTailwind()
+            
+            // Generate data
+            dataset = generateDataset()
+            
+            // Set current date in header
+            const dateEl = document.getElementById('current-date')
+            const now = new Date()
+            dateEl.textContent = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+            
+            // Attach filter listeners
+            const selects = document.querySelectorAll('.filter-select')
+            selects.forEach(select => {
+                select.addEventListener('change', () => {
+                    currentFilters[select.dataset.filter] = select.value
+                    renderAll()
+                })
+            })
+            
+            // Initial render with beautiful fade
+            setTimeout(() => {
+                renderAll()
+                
+                // Add subtle fade-in to KPI grid
+                const kpiGrid = document.getElementById('kpi-grid')
+                kpiGrid.style.opacity = '0'
+                kpiGrid.style.transition = 'opacity 1s cubic-bezier(0.23, 1, 0.32, 1)'
+                setTimeout(() => {
+                    kpiGrid.style.opacity = '1'
+                }, 100)
+            }, 180)
+            
+            console.log('%c✅ Premium Executive Sales Dashboard initialized with 420 realistic records', 'color:#14b8a6; font-family:monospace; font-size:10px')
+        }
+        
+        // Boot the dashboard
+        window.onload = initializeDashboard
+    </script>
+</body>
+</html>
