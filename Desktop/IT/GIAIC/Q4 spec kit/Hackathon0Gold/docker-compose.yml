@@ -5,9 +5,9 @@ services:
     image: postgres:15-alpine
     container_name: hackathon0_postgres
     environment:
-      POSTGRES_DB: hackathon0_business
-      POSTGRES_USER: odoo
-      POSTGRES_PASSWORD: odoo_password_123
+      POSTGRES_DB: ${POSTGRES_DB:-hackathon0_business}
+      POSTGRES_USER: ${POSTGRES_USER:-odoo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
@@ -15,7 +15,7 @@ services:
     networks:
       - hackathon0_network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U odoo"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-odoo}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -29,9 +29,9 @@ services:
     environment:
       HOST: db
       PORT: 5432
-      USER: odoo
-      PASSWORD: odoo_password_123
-      MASTER_PASSWORD: admin_master_key_123
+      USER: ${POSTGRES_USER:-odoo}
+      PASSWORD: ${POSTGRES_PASSWORD}
+      MASTER_PASSWORD: ${ODOO_MASTER_PASSWORD}
     volumes:
       - odoo_data:/var/lib/odoo
       - ./odoo_config:/etc/odoo
