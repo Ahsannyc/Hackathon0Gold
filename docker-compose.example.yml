@@ -1,0 +1,64 @@
+version: '3.8'
+
+# SECURITY NOTE: This is a template file showing the docker-compose structure.
+# DO NOT commit actual passwords to this file or to docker-compose.yml
+#
+# Instead:
+# 1. Copy this file to docker-compose.yml
+# 2. Create a .env file with actual credentials (see .env.example)
+# 3. docker-compose will automatically load variables from .env
+# 4. .env is in .gitignore and never committed
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: hackathon0_postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-hackathon0_business}
+      POSTGRES_USER: ${POSTGRES_USER:-odoo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}  # Set in .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - hackathon0_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-odoo}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  odoo:
+    image: odoo:19.0
+    container_name: hackathon0_odoo
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      HOST: db
+      PORT: 5432
+      USER: ${POSTGRES_USER:-odoo}
+      PASSWORD: ${POSTGRES_PASSWORD}  # Set in .env
+      MASTER_PASSWORD: ${ODOO_MASTER_PASSWORD}  # Set in .env
+    volumes:
+      - odoo_data:/var/lib/odoo
+      - ./odoo_config:/etc/odoo
+    ports:
+      - "8069:8069"
+      - "8071:8071"
+    networks:
+      - hackathon0_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8069/web/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  postgres_data:
+  odoo_data:
+
+networks:
+  hackathon0_network:
+    driver: bridge

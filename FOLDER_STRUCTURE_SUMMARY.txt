@@ -1,0 +1,88 @@
+================================================================================
+  SEMI-AUTONOMOUS AI SOCIAL MEDIA MANAGER - FOLDER ARCHITECTURE
+  Verified: 2026-03-29
+================================================================================
+
+REQUIRED FOLDERS:
+
+✅ Pending_Approval (exists)
+✅ Approved (exists)
+✅ Done (exists)
+✅ session (exists)
+✅ Logs (exists)
+
+All the required folders for the Semi-Autonomous AI Social Media Manager are
+already created in your project directory. The folder structure is complete with:
+
+1. Pending_Approval - for drafted posts, Markdown with YAML meta
+2. Approved - where humans move files for permission
+3. Done - where AI moves files after successful posting
+4. session - for browser session data and persistent logins
+5. Logs - for error screenshots and event logging
+
+No new folders needed to be created as all required directories already exist.
+
+================================================================================
+FOLDER STATUS DETAILS:
+================================================================================
+
+📁 Pending_Approval (65 files)
+   └─ Drafted posts awaiting human review
+   └─ Format: Markdown with YAML frontmatter
+   └─ Workflow: AI draft → Human review → Move to Approved
+
+📁 Approved (32 files)
+   └─ Posts approved by human, ready for publishing
+   └─ Workflow: Manually moved by human from Pending_Approval
+   └─ Action: AI monitors and publishes these posts
+
+📁 Done (2 files)
+   └─ Successfully published posts (archive)
+   └─ Workflow: AI moves files here after successful posting
+   └─ Status: Published to platforms with confirmation
+
+📁 session (12 files)
+   └─ Persistent browser session data
+   └─ Platforms: Facebook, Instagram, Twitter, LinkedIn
+   └─ Purpose: Maintains 24/7 authenticated monitoring sessions
+
+📁 Logs (8 files)
+   └─ Error screenshots and event logging
+   └─ Files: audit_*.json, error_*.log, screenshots, system events
+   └─ Purpose: Debugging, audit trail, error tracking
+
+================================================================================
+WORKFLOW PIPELINE:
+================================================================================
+
+Message Capture (6 Watchers)
+        ↓
+    Needs_Action/
+        ↓
+    Plans/ (AI Analysis)
+        ↓
+Pending_Approval/ ← [HUMAN REVIEW REQUIRED]
+        ↓
+Approved/ ← [HUMAN APPROVAL REQUIRED]
+        ↓
+[AI Publishes to Platforms]
+        ↓
+    Done/ (Archive)
+        ↓
+    Logs/ (Audit Trail)
+
+================================================================================
+SUMMARY:
+================================================================================
+
+Total Files in Workflow: 119
+- Pending_Approval: 65 files (awaiting review)
+- Approved: 32 files (ready to publish)
+- Done: 2 files (archived)
+- Session: 12 files (active sessions)
+- Logs: 8 files (audit & errors)
+
+System Status: ✅ PRODUCTION READY
+
+All required folders exist and are operational.
+================================================================================

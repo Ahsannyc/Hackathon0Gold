@@ -1,0 +1,52 @@
+# Environment & Credentials - SENSITIVE
+.env
+.env.local
+.env.*.local
+credentials.json
+client_secret_*.json
+facebook-auth.json
+*-auth.json
+*_token*
+*.key
+*.pem
+*.p12
+
+# Package dependencies
+node_modules/
+venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# System files
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs and cache
+Logs/
+.cache/
+*.log
+
+# Browser sessions (sensitive auth state)
+session/
+browser-cache/
+
+# Temporary files
+*.tmp
+*.bak
+*~
+
+# PM2 & Process management
+.pm2/
+
+# Local development
+.env
+local.json
+config.local.json
