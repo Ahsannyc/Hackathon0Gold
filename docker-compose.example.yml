@@ -1,5 +1,14 @@
 version: '3.8'
 
+# SECURITY NOTE: This is a template file showing the docker-compose structure.
+# DO NOT commit actual passwords to this file or to docker-compose.yml
+#
+# Instead:
+# 1. Copy this file to docker-compose.yml
+# 2. Create a .env file with actual credentials (see .env.example)
+# 3. docker-compose will automatically load variables from .env
+# 4. .env is in .gitignore and never committed
+
 services:
   db:
     image: postgres:15-alpine
@@ -7,7 +16,7 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-hackathon0_business}
       POSTGRES_USER: ${POSTGRES_USER:-odoo}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}  # Set in .env
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
@@ -30,8 +39,8 @@ services:
       HOST: db
       PORT: 5432
       USER: ${POSTGRES_USER:-odoo}
-      PASSWORD: ${POSTGRES_PASSWORD}
-      MASTER_PASSWORD: ${ODOO_MASTER_PASSWORD}
+      PASSWORD: ${POSTGRES_PASSWORD}  # Set in .env
+      MASTER_PASSWORD: ${ODOO_MASTER_PASSWORD}  # Set in .env
     volumes:
       - odoo_data:/var/lib/odoo
       - ./odoo_config:/etc/odoo
