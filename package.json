@@ -1,0 +1,16 @@
+{
+  "name": "hackathon0gold",
+  "version": "1.0.0",
+  "description": "**Status:** ✅ Production Ready **Last Updated:** 2026-02-16",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "playwright": "^1.58.2"
+  }
+}
